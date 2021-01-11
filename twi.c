@@ -165,8 +165,8 @@ void twi_setTimeoutInMicros(uint32_t timeout, bool reset_with_timeout){
 
 void set_counter(void){
   counter_1 = twi_timeout_us & 0x0000FFUL;
-  counter_2 = twi_timeout_us & 0x00FF00UL >> 8;
-  counter_3 = twi_timeout_us & 0xFF0000UL >> 16;
+  counter_2 = (twi_timeout_us & 0x00FF00UL) >> 8;
+  counter_3 = (twi_timeout_us & 0xFF0000UL) >> 16;
 }
 
 void twi_handleTimeout(bool reset){ 
