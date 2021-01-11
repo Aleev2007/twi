@@ -14,7 +14,7 @@ static volatile byte twi_slarw;
 static volatile bool twi_sendStop;      // should the transaction end with a stop
 static volatile bool twi_inRepStart;     // in the middle of a repeated start
 
-static volatile uint32_t twi_timeout_us = 8000000; // ~ aboute 1 sec, max - 0x00FFFFFF ~ 16 sec
+static uint32_t twi_timeout_us = 8000000; // ~ aboute 1 sec, max - 0x00FFFFFF ~ 16 sec
 //if twi_timeout_us = 0 then endless loop
 
 
@@ -37,9 +37,9 @@ static volatile uint8_t twi_rxBufferIndex;
 
 static volatile uint8_t twi_error;
 
-uint8_t counter_1;
-uint8_t counter_2;
-uint8_t counter_3;
+static uint8_t set_1 = 0;
+static uint8_t set_2 = 0x12;
+static uint8_t set_3 = 0x8A;
 
 //*************************************************************************************
 
@@ -132,11 +132,16 @@ inline void twi_reply(bool ack){
 }
 
 void twi_stop(void){
+  uint8_t counter_1;
+  uint8_t counter_2;
+  uint8_t counter_3;
   // send stop condition
   TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWINT) | _BV(TWSTO);
   // wait for stop condition to be exectued on bus
   // TWINT is not set after a stop condition!
-  set_counter();
+  counter_1 = set_1;
+  counter_2 = set_2;
+  counter_3 = set_3;
 check:                                        // написать это без goto пока не хватает ума. :)
   if (!(TWCR & _BV(TWSTO))) goto go;
   if (twi_timeout_us == 0) goto check;
@@ -161,12 +166,9 @@ void twi_setTimeoutInMicros(uint32_t timeout, bool reset_with_timeout){
   twi_timed_out_flag = false;
   twi_timeout_us = timeout;
   twi_do_reset_on_timeout = reset_with_timeout;
-}
-
-void set_counter(void){
-  counter_1 = twi_timeout_us & 0x0000FFUL;
-  counter_2 = (twi_timeout_us & 0x00FF00UL) >> 8;
-  counter_3 = (twi_timeout_us & 0xFF0000UL) >> 16;
+  set_1 = twi_timeout_us & 0x0000FFUL;
+  set_2 = (twi_timeout_us & 0x00FF00UL) >> 8;
+  set_3 = (twi_timeout_us & 0xFF0000UL) >> 16;
 }
 
 void twi_handleTimeout(bool reset){ 
@@ -192,15 +194,20 @@ bool twi_manageTimeoutFlag(bool clear_flag){
   if (clear_flag){
     twi_timed_out_flag = false;
   }
-  return(flag);
+  return flag;
 }
 
 uint8_t twi_writeTo(uint8_t address, uint8_t* data, uint8_t length, bool wait, bool sendStop){
+  uint8_t counter_1;
+  uint8_t counter_2;
+  uint8_t counter_3;
   // ensure data will it into buffer
   if(TWI_BUFFER_LENGTH < length) return 1;
 
   // wait until twi is ready, become master transmitter
-  set_counter();
+  counter_1 = set_1;
+  counter_2 = set_2;
+  counter_3 = set_3;
 check1:                                        // написать это без goto пока не хватает ума. :)
   if (TWI_READY == twi_state) goto go1;
   if (twi_timeout_us == 0) goto check1;
@@ -208,7 +215,7 @@ check1:                                        // написать это без
   if (!(--counter_2)) goto check1;
   if (!(--counter_3)) goto check1;
   twi_handleTimeout(twi_do_reset_on_timeout); // с этим подумать, возможно выставить флаг здесь.
-  return (5); //timeout
+  return 5; //timeout
 go1:  
   twi_state = TWI_MTX;
   twi_sendStop = sendStop;
@@ -237,7 +244,9 @@ go1:
     twi_inRepStart = false;      // remember, we're dealing with an ASYNC ISR
     TWDR = twi_slarw;
     
-    set_counter();
+    counter_1 = set_1;
+    counter_2 = set_2;
+    counter_3 = set_3;
 check2:                                        // написать это без goto пока не хватает ума. :)
     if (!(TWCR & _BV(TWWC))) goto go2;
     if (twi_timeout_us == 0) goto check2;
@@ -245,7 +254,7 @@ check2:                                        // написать это без
     if (!(--counter_2)) goto check2;
     if (!(--counter_3)) goto check2;
     twi_handleTimeout(twi_do_reset_on_timeout); // с этим подумать, возможно выставить флаг здесь.
-    return (5); //timeout
+    return 5; //timeout
 go2:
     
     TWCR = _BV(TWINT) | _BV(TWEA) | _BV(TWEN) | _BV(TWIE);  // enable INTs, but not START
@@ -255,7 +264,9 @@ go2:
   }
 
   // wait for write operation to complete
-  set_counter();
+  counter_1 = set_1;
+  counter_2 = set_2;
+  counter_3 = set_3;
 check3:                                        // написать это без goto пока не хватает ума. :)
   if (!(wait && (TWI_MTX == twi_state))) goto go3;
   if (twi_timeout_us == 0) goto check3;
@@ -263,7 +274,7 @@ check3:                                        // написать это без
   if (!(--counter_2)) goto check3;
   if (!(--counter_3)) goto check3;
   twi_handleTimeout(twi_do_reset_on_timeout);  // с этим подумать, возможно выставить флаг здесь.
-  return (5); //timeout
+  return 5; //timeout
 go3:
   if (twi_error == 0xFF)
     return 0; // success
@@ -276,10 +287,15 @@ go3:
 }
 
 uint8_t twi_readFrom(uint8_t address, uint8_t* data, uint8_t length, bool sendStop){
+  uint8_t counter_1;
+  uint8_t counter_2;
+  uint8_t counter_3;
   // ensure data will fit into buffer
   if(TWI_BUFFER_LENGTH < length)return 0;
   // wait until twi is ready, become master receiver
-  set_counter();
+  counter_1 = set_1;
+  counter_2 = set_2;
+  counter_3 = set_3;
 check1:                                        // написать это без goto пока не хватает ума. :)
   if (TWI_READY == twi_state) goto go1;
   if (twi_timeout_us == 0) goto check1;
@@ -287,7 +303,7 @@ check1:                                        // написать это без
   if (!(--counter_2)) goto check1;
   if (!(--counter_3)) goto check1;
   twi_handleTimeout(twi_do_reset_on_timeout); // с этим подумать, возможно выставить флаг здесь.
-  return (0); //timeout
+  return 0; //timeout
 go1:
   twi_state = TWI_MRX;
   twi_sendStop = sendStop;
@@ -313,7 +329,9 @@ go1:
     // up. Also, don't enable the START interrupt. There may be one pending from the 
     // repeated start that we sent ourselves, and that would really confuse things.
     twi_inRepStart = false;      // remember, we're dealing with an ASYNC ISR
-    set_counter();
+    counter_1 = set_1;
+    counter_2 = set_2;
+    counter_3 = set_3;
 check2:                                        // написать это без goto пока не хватает ума. :)
     if (!(TWCR & _BV(TWWC))) goto go2;
     if (twi_timeout_us == 0) goto check2;
@@ -321,7 +339,7 @@ check2:                                        // написать это без
     if (!(--counter_2)) goto check2;
     if (!(--counter_3)) goto check2;
     twi_handleTimeout(twi_do_reset_on_timeout); // с этим подумать, возможно выставить флаг здесь.
-    return (0); //timeout
+    return 0; //timeout
 go2:
     TWCR = _BV(TWINT) | _BV(TWEA) | _BV(TWEN) | _BV(TWIE);  // enable INTs, but not START
   } else {
@@ -329,7 +347,9 @@ go2:
     TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWEA) | _BV(TWINT) | _BV(TWSTA);
   }
   // wait for read operation to complete
-  set_counter();
+  counter_1 = set_1;
+  counter_2 = set_2;
+  counter_3 = set_3;
 check3:                                        // написать это без goto пока не хватает ума. :)
   if (!(TWI_MRX == twi_state)) goto go3;
   if (twi_timeout_us == 0) goto check3;
@@ -337,7 +357,7 @@ check3:                                        // написать это без
   if (!(--counter_2)) goto check3;
   if (!(--counter_3)) goto check3;
   twi_handleTimeout(twi_do_reset_on_timeout);  // с этим подумать, возможно выставить флаг здесь.
-  return (0); //timeout
+  return 0; //timeout
 go3:
   if (twi_masterBufferIndex < length) {
     length = twi_masterBufferIndex;
