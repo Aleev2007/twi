@@ -39,9 +39,9 @@ static volatile uint8_t twi_rxBufferIndex;
 
 static volatile uint8_t twi_error;
 
-static volatile uint8_t set_1 = 0;
-static volatile uint8_t set_2 = 0x12;
-static volatile uint8_t set_3 = 0x8A;
+static volatile uint8_t set_1 = 0xFF;
+static volatile uint8_t set_2 = 0xFF;
+static volatile uint8_t set_3 = 0xFF;
 
 //*************************************************************************************
 
