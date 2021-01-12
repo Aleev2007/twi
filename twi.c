@@ -176,9 +176,11 @@ void twi_setTimeoutInMicros(uint32_t timeout, bool reset_with_timeout){
     twi_timeout_off_flag = true;
   }else{
     twi_timeout_off_flag = false;
-    set_1 = timeout & 0x0000FFUL;
-    set_2 = (timeout & 0x00FF00UL) >> 8;
-    set_3 = (timeout & 0xFF0000UL) >> 16;
+    if (timeout > 0xFFFFFF) timeout = 0xFFFFFF;             // max timeout ~ 16 sec
+    uint32_t cycls = microsecondsToClockCycles(timeout)/16; // timeout not less than specified microseconds
+    set_1 = (cycls & 0x0000FFUL) + 1;
+    set_2 = ((cycls & 0x00FF00UL) >> 8) + 1;
+    set_3 = ((cycls & 0xFF0000UL) >> 16) + 1;
   }
 }
 
