@@ -9,17 +9,17 @@
 #include "pins_arduino.h"
 #include "twi.h"
 
-static volatile byte twi_state;
-static volatile byte twi_slarw;
+static volatile uint8_t twi_state;
+static volatile uint8_t twi_slarw;
 static volatile bool twi_sendStop;      // should the transaction end with a stop
 static volatile bool twi_inRepStart;     // in the middle of a repeated start
 
 // static uint32_t twi_timeout_us = 8000000; // ~ aboute 1 sec, max - 0x00FFFFFF ~ 16 sec
 // if twi_timeout_us = 0 then endless loop
 
-static bool twi_timeout_off_flag = true;      // turn off timeout
-static bool twi_timed_out_flag = false;       // a timeout has been seen
-static bool twi_do_reset_on_timeout = false;  // reset the TWI registers on timeout
+static volatile bool twi_timeout_off_flag = true;      // turn off timeout
+static volatile bool twi_timed_out_flag = false;       // a timeout has been seen
+static volatile bool twi_do_reset_on_timeout = false;  // reset the TWI registers on timeout
 
 static void (*twi_onSlaveTransmit)(void);
 static void (*twi_onSlaveReceive)(uint8_t*, int);
@@ -35,11 +35,11 @@ static volatile uint8_t twi_txBufferLength;
 static uint8_t twi_rxBuffer[TWI_BUFFER_LENGTH];
 static volatile uint8_t twi_rxBufferIndex;
 
-static uint8_t twi_error;
+static volatile uint8_t twi_error;
 
-static uint8_t set_1 = 0;
-static uint8_t set_2 = 0x12;
-static uint8_t set_3 = 0x8A;
+static volatile uint8_t set_1 = 0;
+static volatile uint8_t set_2 = 0x12;
+static volatile uint8_t set_3 = 0x8A;
 
 //*************************************************************************************
 
