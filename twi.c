@@ -3,7 +3,7 @@
 #include <inttypes.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <avr/cpufunc.h>
+//#include <avr/cpufunc.h>
 #include <util/atomic.h>
 //#include <util/delay.h>
 #include <compat/twi.h>
@@ -151,9 +151,9 @@ void twi_stop(void){
 check:                                        
   if (!(TWCR & _BV(TWSTO))) goto go;
   if (twi_timeout_off_flag) goto check;
-  if (!(counter_1--)) goto check;
-  if (!(counter_2--)) {_NOP(); goto check;}
-  if (!(counter_3--)) {_NOP(); goto check;}
+  if (!(--counter_1)) goto check;
+  if (!(--counter_2)) goto check;
+  if (!(--counter_3)) goto check;
   twi_handleTimeout(twi_do_reset_on_timeout); 
   return; //timeout
 go:
@@ -224,9 +224,9 @@ uint8_t twi_writeTo(uint8_t address, uint8_t* data, uint8_t length, bool wait, b
 check1:                                        
   if (TWI_READY == twi_state) goto go1;
   if (twi_timeout_off_flag) goto check1;
-  if (!(counter_1--)) goto check1;
-  if (!(counter_2--)) goto check1;
-  if (!(counter_3--)) goto check1;
+  if (!(--counter_1)) goto check1;
+  if (!(--counter_2)) goto check1;
+  if (!(--counter_3)) goto check1;
   twi_handleTimeout(twi_do_reset_on_timeout); 
   return 5; //timeout
 go1:  
@@ -265,9 +265,9 @@ go1:
 check2:                                        
     if (!(TWCR & _BV(TWWC))) goto go2;
     if (twi_timeout_off_flag) goto check2;
-    if (!(counter_1--)) goto check2;
-    if (!(counter_2--)) goto check2;
-    if (!(counter_3--)) goto check2;
+    if (!(--counter_1)) goto check2;
+    if (!(--counter_2)) goto check2;
+    if (!(--counter_3)) goto check2;
     twi_handleTimeout(twi_do_reset_on_timeout); 
     return 5; //timeout
 go2:
@@ -287,9 +287,9 @@ go2:
 check3:                                        
   if (!(wait && (TWI_MTX == twi_state))) goto go3;
   if (twi_timeout_off_flag) goto check3;
-  if (!(counter_1--)) goto check3;
-  if (!(counter_2--)) goto check3;
-  if (!(counter_3--)) goto check3;
+  if (!(--counter_1)) goto check3;
+  if (!(--counter_2)) goto check3;
+  if (!(--counter_3)) goto check3;
   twi_handleTimeout(twi_do_reset_on_timeout);  
   return 5; //timeout
 go3:
@@ -318,9 +318,9 @@ uint8_t twi_readFrom(uint8_t address, uint8_t* data, uint8_t length, bool sendSt
 check1:                                        
   if (TWI_READY == twi_state) goto go1;
   if (twi_timeout_off_flag) goto check1;
-  if (!(counter_1--)) goto check1;
-  if (!(counter_2--)) goto check1;
-  if (!(counter_3--)) goto check1;
+  if (!(--counter_1)) goto check1;
+  if (!(--counter_2)) goto check1;
+  if (!(--counter_3)) goto check1;
   twi_handleTimeout(twi_do_reset_on_timeout); 
   return 0; //timeout
 go1:
@@ -356,9 +356,9 @@ go1:
 check2:                                        
     if (!(TWCR & _BV(TWWC))) goto go2;
     if (twi_timeout_off_flag) goto check2;
-    if (!(counter_1--)) goto check2;
-    if (!(counter_2--)) goto check2;
-    if (!(counter_3--)) goto check2;
+    if (!(--counter_1)) goto check2;
+    if (!(--counter_2)) goto check2;
+    if (!(--counter_3)) goto check2;
     twi_handleTimeout(twi_do_reset_on_timeout); 
     return 0; //timeout
 go2:
@@ -376,9 +376,9 @@ go2:
 check3:                                        
   if (!(TWI_MRX == twi_state)) goto go3;
   if (twi_timeout_off_flag) goto check3;
-  if (!(counter_1--)) goto check3;
-  if (!(counter_2--)) goto check3;
-  if (!(counter_3--)) goto check3;
+  if (!(--counter_1)) goto check3;
+  if (!(--counter_2)) goto check3;
+  if (!(--counter_3)) goto check3;
   twi_handleTimeout(twi_do_reset_on_timeout);  
   return 0; //timeout
 go3:
