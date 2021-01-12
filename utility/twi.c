@@ -452,10 +452,20 @@ void twi_stop(void)
 
   // wait for stop condition to be exectued on bus
   // TWINT is not set after a stop condition!
-  while(TWCR & _BV(TWSTO)){
+  /*while(TWCR & _BV(TWSTO)){
     continue;
-  }
-
+  }*/
+  
+  counter_1 =0x86;  //timeout 1 sec - 16 MHz
+  counter_2 =0x46;
+  counter_3 =0x02;
+check:                                        
+  if (TWI_READY == twi_state) goto go;
+  if ( -- counter_1 ) goto check;
+  if ( -- counter_2 ) goto check;
+  if ( -- counter_3 ) goto check;
+  return;
+go:
   // update twi state
   twi_state = TWI_READY;
 }
