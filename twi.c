@@ -152,8 +152,8 @@ check:
   if (!(TWCR & _BV(TWSTO))) goto go;
   if (twi_timeout_off_flag) goto check;
   if (!(counter_1--)) goto check;
-  if (!(counter_2--)) {_NOP(); goto check};
-  if (!(counter_3--)) {_NOP(); goto check};
+  if (!(counter_2--)) {_NOP(); goto check;}
+  if (!(counter_3--)) {_NOP(); goto check;}
   twi_handleTimeout(twi_do_reset_on_timeout); 
   return; //timeout
 go:
