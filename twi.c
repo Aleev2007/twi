@@ -3,7 +3,9 @@
 #include <inttypes.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <avr/cpufunc.h>
 #include <util/atomic.h>
+//#include <util/delay.h>
 #include <compat/twi.h>
 #include "Arduino.h" // for digitalWrite and micros
 #include "pins_arduino.h"
@@ -84,7 +86,9 @@ void twi_setAddress(uint8_t address){
 }
 
 void twi_setFrequency(uint32_t frequency){
-  //!!! избавиться от 32 битного аргумета функции, возможно сделать switch()
+  // need add switch prescaler for various F_CPU
+  
+  // case F_CPU = 16 MHz
   if (frequency > 400000) frequency = 400000;
   if (frequency >= 10000) {
     TWSR = 1;  // TWI Bit Rate Prescaler = 4
@@ -144,13 +148,13 @@ void twi_stop(void){
     counter_2 = set_2;
     counter_3 = set_3;
   }  
-check:                                        // написать это без goto пока не хватает ума. :)
+check:                                        
   if (!(TWCR & _BV(TWSTO))) goto go;
   if (twi_timeout_off_flag) goto check;
-  if (!(--counter_1)) goto check;
-  if (!(--counter_2)) goto check;
-  if (!(--counter_3)) goto check;
-  twi_handleTimeout(twi_do_reset_on_timeout); // с этим подумать, возможно выставить флаг здесь.
+  if (!(counter_1--)) goto check;
+  if (!(counter_2--)) {_NOP(); goto check};
+  if (!(counter_3--)) {_NOP(); goto check};
+  twi_handleTimeout(twi_do_reset_on_timeout); 
   return; //timeout
 go:
   // update twi state
@@ -197,7 +201,7 @@ void twi_handleTimeout(bool reset){
 }
 
 bool twi_manageTimeoutFlag(bool clear_flag){ 
-  bool flag = twi_timed_out_flag; // why it before clear flag ???
+  bool flag = twi_timed_out_flag;               // why it before clear flag ???
   if (clear_flag){
     twi_timed_out_flag = false;
   }
@@ -217,13 +221,13 @@ uint8_t twi_writeTo(uint8_t address, uint8_t* data, uint8_t length, bool wait, b
     counter_2 = set_2;
     counter_3 = set_3;
   }
-check1:                                        // написать это без goto пока не хватает ума. :)
+check1:                                        
   if (TWI_READY == twi_state) goto go1;
   if (twi_timeout_off_flag) goto check1;
-  if (!(--counter_1)) goto check1;
-  if (!(--counter_2)) goto check1;
-  if (!(--counter_3)) goto check1;
-  twi_handleTimeout(twi_do_reset_on_timeout); // с этим подумать, возможно выставить флаг здесь.
+  if (!(counter_1--)) goto check1;
+  if (!(counter_2--)) goto check1;
+  if (!(counter_3--)) goto check1;
+  twi_handleTimeout(twi_do_reset_on_timeout); 
   return 5; //timeout
 go1:  
   twi_state = TWI_MTX;
@@ -258,13 +262,13 @@ go1:
       counter_2 = set_2;
       counter_3 = set_3;
     }
-check2:                                        // написать это без goto пока не хватает ума. :)
+check2:                                        
     if (!(TWCR & _BV(TWWC))) goto go2;
     if (twi_timeout_off_flag) goto check2;
-    if (!(--counter_1)) goto check2;
-    if (!(--counter_2)) goto check2;
-    if (!(--counter_3)) goto check2;
-    twi_handleTimeout(twi_do_reset_on_timeout); // с этим подумать, возможно выставить флаг здесь.
+    if (!(counter_1--)) goto check2;
+    if (!(counter_2--)) goto check2;
+    if (!(counter_3--)) goto check2;
+    twi_handleTimeout(twi_do_reset_on_timeout); 
     return 5; //timeout
 go2:
     
@@ -280,13 +284,13 @@ go2:
     counter_2 = set_2;
     counter_3 = set_3;
   }
-check3:                                        // написать это без goto пока не хватает ума. :)
+check3:                                        
   if (!(wait && (TWI_MTX == twi_state))) goto go3;
   if (twi_timeout_off_flag) goto check3;
-  if (!(--counter_1)) goto check3;
-  if (!(--counter_2)) goto check3;
-  if (!(--counter_3)) goto check3;
-  twi_handleTimeout(twi_do_reset_on_timeout);  // с этим подумать, возможно выставить флаг здесь.
+  if (!(counter_1--)) goto check3;
+  if (!(counter_2--)) goto check3;
+  if (!(counter_3--)) goto check3;
+  twi_handleTimeout(twi_do_reset_on_timeout);  
   return 5; //timeout
 go3:
   if (twi_error == 0xFF)
@@ -311,13 +315,13 @@ uint8_t twi_readFrom(uint8_t address, uint8_t* data, uint8_t length, bool sendSt
     counter_2 = set_2;
     counter_3 = set_3;
   }
-check1:                                        // написать это без goto пока не хватает ума. :)
+check1:                                        
   if (TWI_READY == twi_state) goto go1;
   if (twi_timeout_off_flag) goto check1;
-  if (!(--counter_1)) goto check1;
-  if (!(--counter_2)) goto check1;
-  if (!(--counter_3)) goto check1;
-  twi_handleTimeout(twi_do_reset_on_timeout); // с этим подумать, возможно выставить флаг здесь.
+  if (!(counter_1--)) goto check1;
+  if (!(counter_2--)) goto check1;
+  if (!(counter_3--)) goto check1;
+  twi_handleTimeout(twi_do_reset_on_timeout); 
   return 0; //timeout
 go1:
   twi_state = TWI_MRX;
@@ -349,13 +353,13 @@ go1:
       counter_2 = set_2;
       counter_3 = set_3;
     }
-check2:                                        // написать это без goto пока не хватает ума. :)
+check2:                                        
     if (!(TWCR & _BV(TWWC))) goto go2;
     if (twi_timeout_off_flag) goto check2;
-    if (!(--counter_1)) goto check2;
-    if (!(--counter_2)) goto check2;
-    if (!(--counter_3)) goto check2;
-    twi_handleTimeout(twi_do_reset_on_timeout); // с этим подумать, возможно выставить флаг здесь.
+    if (!(counter_1--)) goto check2;
+    if (!(counter_2--)) goto check2;
+    if (!(counter_3--)) goto check2;
+    twi_handleTimeout(twi_do_reset_on_timeout); 
     return 0; //timeout
 go2:
     TWCR = _BV(TWINT) | _BV(TWEA) | _BV(TWEN) | _BV(TWIE);  // enable INTs, but not START
@@ -369,13 +373,13 @@ go2:
     counter_2 = set_2;
     counter_3 = set_3;
   }
-check3:                                        // написать это без goto пока не хватает ума. :)
+check3:                                        
   if (!(TWI_MRX == twi_state)) goto go3;
   if (twi_timeout_off_flag) goto check3;
-  if (!(--counter_1)) goto check3;
-  if (!(--counter_2)) goto check3;
-  if (!(--counter_3)) goto check3;
-  twi_handleTimeout(twi_do_reset_on_timeout);  // с этим подумать, возможно выставить флаг здесь.
+  if (!(counter_1--)) goto check3;
+  if (!(counter_2--)) goto check3;
+  if (!(counter_3--)) goto check3;
+  twi_handleTimeout(twi_do_reset_on_timeout);  
   return 0; //timeout
 go3:
   if (twi_masterBufferIndex < length) {
